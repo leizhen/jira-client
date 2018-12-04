@@ -25,6 +25,7 @@ jira-client is still under heavy development. Here's what works:
 * Add and remove issue links
 * Create sub-tasks
 * Retrieval of Rapid Board backlog and sprints
+* JIRA Tempo Plugin including Accounts, Customers, Categories
 
 ## Maven Dependency ##
 

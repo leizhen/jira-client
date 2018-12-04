@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.rcarz.jiraclient.tempo.Tempo;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
@@ -42,6 +43,7 @@ public class JiraClient {
 
     private RestClient restclient = null;
     private String username = null;
+    private Tempo tempo = null;
 
     /**
      * Creates a JIRA client.
@@ -84,9 +86,19 @@ public class JiraClient {
 
         if (creds != null) {
             username = creds.getLogonName();
-            //intialize connection if required
+            //initialize connection if required
             creds.initialize(restclient);
         }
+        tempo = new Tempo(restclient);
+    }
+
+    /**
+     * Returns facade object for JIRA Tempo Plugin
+     *
+     * @return tempo facade object
+     */
+    public Tempo tempo() {
+        return tempo;
     }
 
     /**

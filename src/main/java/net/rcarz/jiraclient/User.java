@@ -19,11 +19,12 @@
 
 package net.rcarz.jiraclient;
 
+import net.rcarz.jiraclient.tempo.Category;
 import net.sf.json.JSON;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a JIRA user.
@@ -42,7 +43,7 @@ public class User extends Resource {
      * @param restclient REST client instance
      * @param json       JSON payload
      */
-    protected User(RestClient restclient, JSONObject json) {
+    public User(RestClient restclient, JSONObject json) {
         super(restclient);
 
         if (json != null)
@@ -75,6 +76,40 @@ public class User extends Resource {
             throw new JiraException("JSON payload is malformed");
 
         return new User(restclient, (JSONObject) result);
+    }
+
+    public static List<User> search(RestClient restclient, String query) throws JiraException {
+        return search(restclient, query, 0, 50, true, false);
+    }
+
+    public static List<User> search(RestClient restclient, String query, int startAt, int maxResults, boolean includeActive, boolean includeInactive) throws
+            JiraException {
+        JSON response;
+
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("username", query);
+        params.put("startAt", "" + startAt);
+        params.put("maxResults", "" + maxResults);
+        params.put("includeActive", "" + includeActive);
+        params.put("includeInactive", "" + includeInactive);
+
+        try {
+            response = restclient.get(getBaseUri() + "user/search", params);
+        } catch (Exception ex) {
+            throw new JiraException("Failed to find users " + query, ex);
+        }
+
+        if (!(response instanceof JSONArray)) {
+            throw new JiraException("JSON payload is malformed");
+        }
+
+        List<User> result = new ArrayList<User>();
+        Iterator it = ((JSONArray) response).iterator();
+        while (it != null && it.hasNext()) {
+            result.add(new User(restclient, (JSONObject) it.next()));
+        }
+
+        return result;
     }
 
     private void deserialise(JSONObject json) {

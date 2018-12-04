@@ -100,7 +100,7 @@ public class RestClient {
     }
 
     /**
-     * Build a URI from a path and query parmeters.
+     * Build a URI from a path and query parameters.
      *
      * @param path Path to append to the base URI
      * @param params Map of key value pairs
@@ -179,12 +179,8 @@ public class RestClient {
         if (payload != null) {
             StringEntity ent = null;
 
-            try {
-                ent = new StringEntity(payload, "UTF-8");
-                ent.setContentType("application/json");
-            } catch (UnsupportedEncodingException ex) {
-                /* utf-8 should always be supported... */
-            }
+            ent = new StringEntity(payload, "UTF-8");
+            ent.setContentType("application/json");
 
             req.addHeader("Content-Type", "application/json");
             req.setEntity(ent);
