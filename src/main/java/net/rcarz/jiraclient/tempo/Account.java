@@ -2,13 +2,11 @@ package net.rcarz.jiraclient.tempo;
 
 import net.rcarz.jiraclient.*;
 import net.sf.json.JSON;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static net.rcarz.jiraclient.tempo.TempoResource.getBaseTempoUri;
 
@@ -108,12 +106,12 @@ public class Account {
             String leadName = username;
             if (StringUtils.isBlank(username)) {
                 List<User> users = User.search(restClient, email);
-                Optional<User> user = users.stream().filter(u -> u.getEmail().equals(email)).findFirst();
+                Optional<User> user = users.stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst();
                 if (user.isPresent()) {
                     leadName = user.get().getName();
                 } else {
                     users = User.search(restClient, name);
-                    user = users.stream().filter(u -> u.getDisplayName().equals(name)).findFirst();
+                    user = users.stream().filter(u -> u.getDisplayName().equalsIgnoreCase(name)).findFirst();
                     if (user.isPresent()) {
                         leadName = user.get().getName();
                     }
@@ -145,6 +143,26 @@ public class Account {
         fc.field(Field.NAME, name);
         fc.field(Field.KEY, key);
         return fc;
+    }
+
+
+    public static Account get(RestClient restClient, String key) throws JiraException{
+        JSON response;
+
+        try {
+            response = restClient.get(getRestUri(key));
+        } catch (Exception ex) {
+            throw new JiraException("Failed to retrieve account", ex);
+        }
+
+        if (!(response instanceof JSONObject)) {
+            throw new JiraException("JSON payload is malformed");
+        }
+        JSONObject result = (JSONObject) response;
+        if (!result.containsKey("key") || !(result.get("key") instanceof String)) {
+            return null;
+        }
+        return new Account(restClient, result);
     }
 
     private String status;

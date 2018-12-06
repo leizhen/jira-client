@@ -30,4 +30,8 @@ public class Tempo {
     public Customer createCustomer(String key, String name) throws JiraException {
         return Customer.create(restClient, key, name);
     }
+
+    public Account getAccount(String key) throws JiraException {
+        return Account.get(restClient, key);
+    }
 }
