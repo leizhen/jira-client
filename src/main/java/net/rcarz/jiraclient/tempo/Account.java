@@ -5,6 +5,7 @@ import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpStatus;
 
 import java.util.*;
 
@@ -147,10 +148,14 @@ public class Account {
 
 
     public static Account get(RestClient restClient, String key) throws JiraException{
-        JSON response;
+        JSON response = null;
 
         try {
             response = restClient.get(getRestUri(key));
+        } catch (RestException rx) {
+            if (rx.getHttpStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                return null;
+            }
         } catch (Exception ex) {
             throw new JiraException("Failed to retrieve account", ex);
         }
