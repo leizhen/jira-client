@@ -9,8 +9,12 @@ public class TempoResource {
         return "1";
     }
 
-    public static String getBaseTempoUri() {
+    public static String getBaseTempoAccountsUri() {
         return "rest/tempo-accounts/" + getApiRev();
+    }
+
+    public static String getBaseTempoTeamsUri() {
+        return "rest/tempo-teams/" + getApiRev();
     }
 
 }

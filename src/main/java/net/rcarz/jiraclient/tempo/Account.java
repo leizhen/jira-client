@@ -2,20 +2,21 @@ package net.rcarz.jiraclient.tempo;
 
 import net.rcarz.jiraclient.*;
 import net.sf.json.JSON;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 
 import java.util.*;
 
-import static net.rcarz.jiraclient.tempo.TempoResource.getBaseTempoUri;
+import static net.rcarz.jiraclient.tempo.TempoResource.getBaseTempoAccountsUri;
 
 /**
  * Created by Sergey Nekhviadovich on 12/4/2018.
  */
 public class Account {
+
     private interface Field {
+
         String NAME = "name";
         String KEY = "key";
         String ID = "id";
@@ -30,7 +31,7 @@ public class Account {
 
 
     private static String getRestUri(String key) {
-        String url = getBaseTempoUri() + "/account/";
+        String url = getBaseTempoAccountsUri() + "/account/";
         if (StringUtils.isNotBlank(key)) {
             url += "key/" + key;
         }
@@ -74,7 +75,7 @@ public class Account {
 
             if (!(result instanceof JSONObject) || !((JSONObject) result).containsKey("key")
                     || !(((JSONObject) result).get("key") instanceof String)) {
-                throw new JiraException("Unexpected result on create account");
+                throw new JiraException("Unexpected result on create account: " + result.toString());
             }
 
             return new Account(restClient, (JSONObject) result);
@@ -83,9 +84,8 @@ public class Account {
         /**
          * Appends a field to the create action.
          *
-         * @param name Name of the field
+         * @param name  Name of the field
          * @param value New field value
-         *
          * @return the current fluent create instance
          */
         public Account.FluentCreate field(String name, Object value) {
@@ -97,9 +97,8 @@ public class Account {
          * Appends lead field with provided data. At least one of the fields is mandatory
          *
          * @param username if set other parameters are ignored
-         * @param name display name of the lead
-         * @param email email of the lead
-         *
+         * @param name     display name of the lead
+         * @param email    email of the lead
          * @return the current fluent create instance
          */
         public Account.FluentCreate lead(final String username, final String email, final String name) throws JiraException {
@@ -147,7 +146,7 @@ public class Account {
     }
 
 
-    public static Account get(RestClient restClient, String key) throws JiraException{
+    public static Account get(RestClient restClient, String key) throws JiraException {
         JSON response = null;
 
         try {
@@ -155,6 +154,8 @@ public class Account {
         } catch (RestException rx) {
             if (rx.getHttpStatusCode() == HttpStatus.SC_NOT_FOUND) {
                 return null;
+            } else {
+                throw new JiraException("Failed to retrieve account", rx);
             }
         } catch (Exception ex) {
             throw new JiraException("Failed to retrieve account", ex);

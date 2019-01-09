@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static net.rcarz.jiraclient.tempo.TempoResource.getBaseTempoUri;
+import static net.rcarz.jiraclient.tempo.TempoResource.getBaseTempoAccountsUri;
 
 /**
  * Created by Sergey Nekhviadovich on 12/4/2018.
@@ -24,7 +24,7 @@ public class Customer {
     private static final String NAME = "name";
 
     private static String getRestUri() {
-        return getBaseTempoUri() + "/customer/";
+        return getBaseTempoAccountsUri() + "/customer/";
     }
 
     private Integer id;
@@ -100,7 +100,7 @@ public class Customer {
         }
         if (!(result instanceof JSONObject) || !((JSONObject) result).containsKey("key")
                 || !(((JSONObject) result).get("key") instanceof String)) {
-            throw new JiraException("Unexpected result on customer creation");
+            throw new JiraException("Unexpected result on customer creation: " + result.toString());
         }
 
         return new Customer((JSONObject) result);

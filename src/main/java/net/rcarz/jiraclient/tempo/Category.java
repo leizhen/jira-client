@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static net.rcarz.jiraclient.tempo.TempoResource.getBaseTempoUri;
+import static net.rcarz.jiraclient.tempo.TempoResource.getBaseTempoAccountsUri;
 
 /**
  * Created by Sergey Nekhviadovich on 12/4/2018.
@@ -24,7 +24,7 @@ public class Category {
     private static final String NAME = "name";
 
     private static String getRestUri() {
-        return getBaseTempoUri() + "/category/";
+        return getBaseTempoAccountsUri() + "/category/";
     }
 
     private Integer id;
