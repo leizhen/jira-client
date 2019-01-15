@@ -2,6 +2,7 @@ package net.rcarz.jiraclient.tempo;
 
 import net.rcarz.jiraclient.JiraException;
 import net.rcarz.jiraclient.RestClient;
+import net.rcarz.jiraclient.User;
 
 import java.util.List;
 

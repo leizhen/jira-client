@@ -21,7 +21,8 @@ public class TeamTest {
 
     @Test
     public void testInitTeam() {
-        Team team = new Team(getTestJSON());
+        final RestClient restClient = PowerMockito.mock(RestClient.class);
+        Team team = new Team(restClient, getTestJSON());
         assertEquals(team.getId(), (Integer) 3);
         assertEquals(team.getName(), "Cloud Development");
         assertEquals(team.getSummary(), "Cloud Development Team");

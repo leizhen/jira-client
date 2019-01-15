@@ -1,8 +1,6 @@
 package net.rcarz.jiraclient.tempo;
 
-import net.rcarz.jiraclient.JiraException;
-import net.rcarz.jiraclient.RestClient;
-import net.rcarz.jiraclient.RestException;
+import net.rcarz.jiraclient.*;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -31,20 +29,23 @@ public class Team {
     private String name;
     private String summary;
     private String lead;
+    private RestClient restClient;
+    private List<User> members;
 
-    public Team(Integer id, String name, String summary, String lead) {
+    private Team(RestClient restClient, Integer id, String name, String summary, String lead) {
         this.id = id;
         this.name = name;
         this.summary = summary;
         this.lead = lead;
+        this.restClient = restClient;
     }
 
+    public Team(RestClient restClient, JSONObject map) {
+        this.restClient = restClient;
 
-    public Team(JSONObject map) {
-        id = net.rcarz.jiraclient.Field.getInteger(map.get(ID));
-        name = net.rcarz.jiraclient.Field.getString(map.get(NAME));
-        summary = net.rcarz.jiraclient.Field.getString(map.get(SUMMARY));
-        lead = net.rcarz.jiraclient.Field.getString(map.get(LEAD));
+        if (map != null) {
+            deserialise(map);
+        }
     }
 
     public Integer getId() {
@@ -79,6 +80,19 @@ public class Team {
         this.lead = lead;
     }
 
+    /**
+     * Returns team members only if it was previously initialized by #findTeamMembers
+     *
+     * @return list of users
+     */
+    public List<User> getMembers() {
+        return members;
+    }
+
+    public void setMembers(List<User> members) {
+        this.members = members;
+    }
+
     public static List<Team> get(RestClient restclient) throws JiraException {
         JSON response = null;
 
@@ -94,7 +108,7 @@ public class Team {
         List<Team> result = new ArrayList<Team>();
         Iterator it = ((JSONArray) response).iterator();
         while (it != null && it.hasNext()) {
-            result.add(new Team((JSONObject) it.next()));
+            result.add(new Team(restclient, (JSONObject) it.next()));
         }
 
         return result;
@@ -125,14 +139,14 @@ public class Team {
             return null;
         }
 
-        return new Team(result);
+        return new Team(restClient, result);
     }
 
     public static Team create(RestClient restClient, String name, String summary, String lead) throws JiraException {
         JSON result = null;
 
         try {
-            result = restClient.post(getRestUri(), new Team(null, name, summary, lead).asJsonObject());
+            result = restClient.post(getRestUri(), new Team(null, null, name, summary, lead).asJsonObject());
         } catch (Exception ex) {
             throw new JiraException("Failed to create team", ex);
         }
@@ -142,7 +156,7 @@ public class Team {
             throw new JiraException("Unexpected result on team creation: " + result.toString());
         }
 
-        return new Team((JSONObject) result);
+        return new Team(restClient, (JSONObject) result);
     }
 
     /**
@@ -176,8 +190,36 @@ public class Team {
 
     }
 
+    public List<User> findTeamMembers() throws JiraException {
+        if (members == null) {
+            JSON response;
+
+            if (id == null) {
+                throw new IllegalArgumentException("ID can't be null");
+            }
+            try {
+                response = restClient.get(getRestUri() + id + "/member");
+            } catch (Exception ex) {
+                throw new JiraException("Failed to retrieve team members by id: " + id, ex);
+            }
+
+            if (!(response instanceof JSONArray)) {
+                throw new JiraException("JSON payload is malformed");
+            }
+            members = new ArrayList<>();
+            String teamMemberUsername = null;
+            Iterator it = ((JSONArray) response).iterator();
+            while (it != null && it.hasNext()) {
+                teamMemberUsername = ((JSONObject) it.next()).getJSONObject("member").getString("name");
+                members.add(User.get(restClient, teamMemberUsername));
+            }
+        }
+        return members;
+    }
+
     public JSONObject asJsonObject() {
         JSONObject result = new JSONObject();
+
         if (id != null) {
             result.put(ID, id);
         }
@@ -188,7 +230,14 @@ public class Team {
         if (StringUtils.isNotBlank(lead)) {
             result.put(LEAD, lead);
         }
+
         return result;
     }
-}
 
+    private void deserialise(JSONObject map) {
+        id = net.rcarz.jiraclient.Field.getInteger(map.get(ID));
+        name = net.rcarz.jiraclient.Field.getString(map.get(NAME));
+        summary = net.rcarz.jiraclient.Field.getString(map.get(SUMMARY));
+        lead = net.rcarz.jiraclient.Field.getString(map.get(LEAD));
+    }
+}
