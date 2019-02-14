@@ -22,6 +22,7 @@ package net.rcarz.jiraclient;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.http.HttpStatus;
 
 import java.util.*;
 
@@ -70,6 +71,12 @@ public class User extends Resource {
         try {
             result = restclient.get(getBaseUri() + "user", params);
         } catch (Exception ex) {
+            if (ex instanceof RestException) {
+                RestException re = (RestException) ex;
+                if (re.getHttpStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                    throw new JiraException("No such user found " + username, re);
+                }
+            }
             throw new JiraException("Failed to retrieve user " + username, ex);
         }
 

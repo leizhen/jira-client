@@ -20,6 +20,8 @@ public class Team {
     private static final String NAME = "name";
     private static final String SUMMARY = "summary";
     private static final String LEAD = "lead";
+    private static final String MEMBER = "member";
+    private static final String MEMBERSHIP = "membership";
 
     private static String getRestUri() {
         return TempoResource.getBaseTempoTeamsUri() + "/team/";
@@ -31,6 +33,7 @@ public class Team {
     private String lead;
     private RestClient restClient;
     private List<User> members;
+    private List<TeamMembership> membershipList;
 
     private Team(RestClient restClient, Integer id, String name, String summary, String lead) {
         this.id = id;
@@ -92,6 +95,20 @@ public class Team {
     public void setMembers(List<User> members) {
         this.members = members;
     }
+
+    /**
+     * Returns membership data only if it was previously initialized by #findMembership
+     *
+     * @return list of team membership
+     */
+    public List<TeamMembership> getMembershipList() {
+        return membershipList;
+    }
+
+    public void setMembershipList(List<TeamMembership> membershipList) {
+        this.membershipList = membershipList;
+    }
+
 
     public static List<Team> get(RestClient restclient) throws JiraException {
         JSON response = null;
@@ -192,6 +209,13 @@ public class Team {
 
     public List<User> findTeamMembers() throws JiraException {
         if (members == null) {
+            findTeamMembersship();
+        }
+        return members;
+    }
+
+    public List<TeamMembership> findTeamMembersship() throws JiraException {
+        if (membershipList == null) {
             JSON response;
 
             if (id == null) {
@@ -207,14 +231,31 @@ public class Team {
                 throw new JiraException("JSON payload is malformed");
             }
             members = new ArrayList<>();
-            String teamMemberUsername = null;
+            membershipList = new ArrayList<>();
             Iterator it = ((JSONArray) response).iterator();
             while (it != null && it.hasNext()) {
-                teamMemberUsername = ((JSONObject) it.next()).getJSONObject("member").getString("name");
-                members.add(User.get(restClient, teamMemberUsername));
+                JSONObject jsonObject = (JSONObject) it.next();
+                String teamMemberUsername = jsonObject.getJSONObject(MEMBER).getString("name");
+                User user = null;
+                try {
+                    user = User.get(restClient, teamMemberUsername);
+                } catch (JiraException je) {
+                    if (je.getMessage().startsWith("No such user found")) {
+                        JSONObject defaultUser = new JSONObject();
+                        defaultUser.put("id", teamMemberUsername);
+                        defaultUser.put("name", teamMemberUsername);
+                        defaultUser.put("displayName", teamMemberUsername);
+                        defaultUser.put("active", false);
+                        user = new User(restClient, defaultUser);
+                    }
+                }
+                if (user != null) {
+                    members.add(user);
+                    membershipList.add(new TeamMembership(user, jsonObject.getJSONObject(MEMBERSHIP)));
+                }
             }
         }
-        return members;
+        return membershipList;
     }
 
     public JSONObject asJsonObject() {
