@@ -20,9 +20,11 @@
 package net.rcarz.jiraclient;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import static net.rcarz.jiraclient.Resource.getBaseUri;
 
 import net.sf.json.JSON;
@@ -149,6 +151,42 @@ public class Project extends Resource {
             throw new JiraException("JSON payload is malformed");
 
         return Field.getResourceArray(User.class, result, restclient);
+    }
+
+    /**
+     * @param type can be "user" or "group", case is important
+     */
+    public void addActorToProjectRole(String roleName, String type, String ... actorNames) throws JiraException {
+        JSON response;
+
+        if (key == null) {
+            throw new IllegalArgumentException("Project key can't be null");
+        }
+
+        if (actorNames == null) {
+            throw new IllegalArgumentException("Actor names can't be null");
+        }
+
+        String linkWithRoleId = roles.get(roleName);
+        if (linkWithRoleId == null) {
+            throw new IllegalArgumentException("Project role with name " + roleName + " does not exist");
+        }
+        Integer roleId = Integer.parseInt(linkWithRoleId.substring(linkWithRoleId.lastIndexOf("/") + 1));
+
+        JSONObject requestBody = new JSONObject();
+        requestBody.put(type, actorNames);
+
+        try {
+            response = restclient.post(getBaseUri() + "project/" + key + "/role/" + roleId, requestBody);
+        } catch (Exception ex) {
+            throw new JiraException("Failed to add actors " + Arrays.toString(actorNames)+ " to project role " + roleName, ex);
+        }
+
+        if (!(response instanceof JSONObject)) {
+            throw new JiraException("JSON payload is malformed");
+        }
+
+        return;
     }
 
     @Override
