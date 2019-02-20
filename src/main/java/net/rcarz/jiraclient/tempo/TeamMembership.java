@@ -14,32 +14,99 @@ public class TeamMembership {
     private static final String ID = "id";
     private static final String ROLE = "role";
     private static final String ROLE_NAME = "name";
-    private static final String START_DATE = "dateFromANSI";
-    private static final String END_DATE = "dateToANSI";
+    private static final String START_DATE_ANSI = "dateFromANSI";
+    private static final String END_DATE_ANSI = "dateToANSI";
+    private static final String START_DATE = "dateFrom";
+    private static final String END_DATE = "dateTo";
     private static final String AVAILABILITY = "availability";
     private static final String STATUS = "status";
-    private static final String TEAM_ID = "team_id";
+    private static final String TEAM_ID = "teamId";
+    private static final String MEMBERSHIP = "membership";
+
 
     private Integer id;
     private String role;
+    private Integer roleId;
     //Workload percent
     private Integer availability;
     private User user;
     private Integer teamId;
     private String status;
-    private Date startDate;
-    private Date endDate;
+    private Date startDateANSI;
+    private Date endDateANSI;
+    private String startDate;
+    private String endDate;
+
+    public TeamMembership(User user, Integer id, Integer roleId, String role, Integer availability, Integer teamId, String status, String
+            startDate, String endDate) {
+        this.user = user;
+        this.id = id;
+        this.roleId = roleId;
+        this.role = role;
+        this.availability = availability;
+        this.teamId = teamId;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
 
     public TeamMembership(User user, JSONObject map) {
         this.user = user;
         id = net.rcarz.jiraclient.Field.getInteger(map.get(ID));
-        teamId = net.rcarz.jiraclient.Field.getInteger(map.get(TEAM_ID));
-        status = net.rcarz.jiraclient.Field.getString(map.get(STATUS));
-        startDate = parseDate(map, START_DATE);
-        endDate = parseDate(map, END_DATE);
-        if (map.get(ROLE) != null) {
-            role = ((JSONObject) map.get(ROLE)).getString(ROLE_NAME);
+        teamId = (map.getJSONObject(MEMBERSHIP)).getInt(TEAM_ID);
+        availability = (map.getJSONObject(MEMBERSHIP)).getInt(AVAILABILITY);
+        status = (map.getJSONObject(MEMBERSHIP)).getString(STATUS);
+        startDateANSI = parseDate((map.getJSONObject(MEMBERSHIP)), START_DATE_ANSI);
+        endDateANSI = parseDate((map.getJSONObject(MEMBERSHIP)), END_DATE_ANSI);
+        startDate = (map.getJSONObject(MEMBERSHIP)).getString(START_DATE);
+        endDate = (map.getJSONObject(MEMBERSHIP)).getString(END_DATE);
+        if (map.getJSONObject(MEMBERSHIP).get(ROLE) != null) {
+            role = (map.getJSONObject(MEMBERSHIP)).getJSONObject(ROLE).getString(ROLE_NAME);
+            roleId = (map.getJSONObject(MEMBERSHIP)).getJSONObject(ROLE).getInt(ID);
         }
+    }
+
+    public JSONObject asJsonObject() {
+        JSONObject result = new JSONObject();
+        JSONObject member = new JSONObject();
+        JSONObject membership = new JSONObject();
+        JSONObject role = new JSONObject();
+
+        if (id != null) {
+            result.put(ID, id);
+        }
+        member.put("name", user.getName());
+        member.put("type", "USER");
+        if (roleId != null) {
+            role.put(ID, roleId);
+        }
+        if (this.role != null) {
+            role.put(ROLE_NAME, this.role);
+        }
+        membership.put(ROLE, role);
+        if (startDateANSI != null) {
+            membership.put(START_DATE_ANSI, startDateANSI.toString());
+        }
+        if (endDateANSI != null) {
+            membership.put(END_DATE_ANSI, endDateANSI.toString());
+        }
+        if (startDate != null) {
+            membership.put(START_DATE, startDate);
+        }
+        if (endDate != null) {
+            membership.put(END_DATE, endDate);
+        }
+        if (availability != null) {
+            membership.put(AVAILABILITY, availability);
+        }
+        membership.put(TEAM_ID, teamId);
+        if (status != null) {
+            membership.put(STATUS, status);
+        }
+
+        result.put("member", member);
+        result.put("membership", membership);
+        return result;
     }
 
     private Date parseDate(JSONObject map, String field) {
@@ -70,6 +137,14 @@ public class TeamMembership {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public Integer getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(Integer roleId) {
+        this.roleId = roleId;
     }
 
     public Integer getAvailability() {
@@ -104,19 +179,35 @@ public class TeamMembership {
         this.status = status;
     }
 
-    public Date getStartDate() {
+    public String getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Date startDate) {
+    public void setStartDate(String startDate) {
         this.startDate = startDate;
     }
 
-    public Date getEndDate() {
+    public String getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(Date endDate) {
+    public void setEndDate(String endDate) {
         this.endDate = endDate;
+    }
+
+    public Date getStartDateANSI() {
+        return startDateANSI;
+    }
+
+    public void setStartDateANSI(Date startDateANSI) {
+        this.startDateANSI = startDateANSI;
+    }
+
+    public Date getEndDateANSI() {
+        return endDateANSI;
+    }
+
+    public void setEndDateANSI(Date endDateANSI) {
+        this.endDateANSI = endDateANSI;
     }
 }

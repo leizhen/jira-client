@@ -8,8 +8,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Volha Bibik on 01/2/2019.
@@ -34,6 +36,7 @@ public class Team {
     private RestClient restClient;
     private List<User> members;
     private List<TeamMembership> membershipList;
+    private Map<String, Integer> memberRoles;
 
     private Team(RestClient restClient, Integer id, String name, String summary, String lead) {
         this.id = id;
@@ -256,6 +259,65 @@ public class Team {
             }
         }
         return membershipList;
+    }
+
+    /**
+     * @param dateFrom String with date in format "dd/MM/yyyy"
+     * @param dateTo String with date in format "dd/MM/yyyy"
+     *
+     * @return membership with role by default if provided roleName does not exist
+     */
+    public TeamMembership addTeamMember(String username, String roleName, String dateFrom, String dateTo, Integer availability) throws
+            JiraException {
+        JSON response;
+        
+        if (id == null) {
+            throw new IllegalArgumentException("ID can't be null");
+        }
+
+        findMembersRoles();
+        Integer roleId = memberRoles.get(roleName);
+
+        try {
+            response = restClient.post(getRestUri() + id + "/member", new TeamMembership(User.get(restClient, username), null,
+                    roleId, null, availability, id, null, dateFrom, dateTo).asJsonObject());
+        } catch (Exception ex) {
+            throw new JiraException("Failed to add team member " + username + " by id: " + id, ex);
+        }
+
+        if (!(response instanceof JSONObject)) {
+            throw new JiraException("JSON payload is malformed");
+        }
+
+        String teamMemberUsername = ((JSONObject) response).getJSONObject("member").getString("name");
+
+        return new TeamMembership(User.get(restClient, teamMemberUsername), (JSONObject) response);
+    }
+
+    public Map<String, Integer> findMembersRoles() throws JiraException {
+
+        if (memberRoles == null) {
+            JSON response;
+
+            try {
+                response = restClient.get( TempoResource.getBaseTempoTeamsUri() + "/role");
+            } catch (Exception ex) {
+                throw new JiraException("Failed to retrieve team roles", ex);
+            }
+
+            if (!(response instanceof JSONArray)) {
+                throw new JiraException("JSON payload is malformed");
+            }
+            memberRoles = new HashMap<>();
+            Iterator it = ((JSONArray) response).iterator();
+            while (it != null && it.hasNext()) {
+                JSONObject jsonObject = (JSONObject) it.next();
+                String roleName = jsonObject.getString("name");
+                Integer roleId = jsonObject.getInt("id");
+                memberRoles.put(roleName, roleId);
+            }
+        }
+        return memberRoles;
     }
 
     public JSONObject asJsonObject() {
