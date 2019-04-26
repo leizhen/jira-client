@@ -57,4 +57,5 @@ public class ProjectTest {
         assertEquals(name, project.getCategory().getName());
         assertEquals(id, project.getCategory().getId());
     }
+
 }

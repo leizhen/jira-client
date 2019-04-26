@@ -509,6 +509,72 @@ public class JiraClient {
             throw new JiraException(ex.getMessage(), ex);
         }
     }
+
+    /**
+     * 获取project的permission scheme
+     * @param key
+     * @return
+     * @throws JiraException
+     */
+    public PermissionScheme getProjectPermissionScheme(String key) throws JiraException{
+        try{
+            PermissionScheme permissionScheme = new PermissionScheme();
+            URI uri = restclient.buildURI(Resource.getBaseUri() + "project/" + key + "/permissionscheme");
+            JSONObject response = (JSONObject) restclient.get(uri);
+            permissionScheme.setDescription(response.getString("description"));
+            permissionScheme.setId(response.getInt("id"));
+            permissionScheme.setSelf(response.getString("self"));
+            permissionScheme.setName(response.getString("name"));
+
+            return permissionScheme;
+        }catch(Exception ex){
+            throw new JiraException(ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * 设置项目使用的permission scheme
+     * @param key
+     * @param permissionSchemeId
+     * @throws JiraException
+     */
+    public void setProjectPermissionScheme(String key, int permissionSchemeId) throws JiraException{
+        try{
+            URI uri = restclient.buildURI(Resource.getBaseUri() + "project/" + key + "/permissionscheme");
+            JSONObject payload = new JSONObject();
+            payload.put("id", permissionSchemeId);
+            restclient.put(uri, payload);
+        }catch(Exception ex){
+            throw new JiraException(ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * 获取permission scheme的列表
+     * @return
+     * @throws JiraException
+     */
+    public List<PermissionScheme> permissionSchemes() throws JiraException{
+        try{
+            URI uri = restclient.buildURI(Resource.getBaseUri() + "permissionscheme");
+            JSONObject response = (JSONObject) restclient.get(uri);
+            JSONArray jsonArray = response.getJSONArray("permissionSchemes");
+            List<PermissionScheme> list = new ArrayList<PermissionScheme>();
+            for(int i = 0 ;i  < jsonArray.size(); i ++){
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                PermissionScheme permissionScheme = new PermissionScheme();
+                list.add(permissionScheme);
+
+                permissionScheme.setName(jsonObject.getString("name"));
+                permissionScheme.setSelf(jsonObject.getString("self"));
+                permissionScheme.setId(jsonObject.getInt("id"));
+                permissionScheme.setDescription(jsonObject.getString("description"));
+            }
+            return list;
+        }catch(Exception ex){
+            throw new JiraException(ex.getMessage(), ex);
+        }
+    }
     
     /**
      * Obtains the list of all issue types in Jira.
