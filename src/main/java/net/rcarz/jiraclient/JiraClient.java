@@ -493,6 +493,43 @@ public class JiraClient {
             throw new JiraException(ex.getMessage(), ex);
         }
     }
+
+    /**
+     * create a project, use projectType=software, prjectTemplate=scrum, no issuesecurity scheme
+     * @param key: project key
+     * @param name: project name
+     * @param permissionScheme
+     * @param categoryId
+     */
+    public String createProject(String lead,String key, String name, String description, int permissionScheme, int categoryId) throws JiraException{
+        JSONObject payload = new JSONObject();
+        payload.put("key", key);
+        payload.put("name", name);
+        payload.put("lead", lead);
+        payload.put("assigneeType", "PROJECT_LEAD");
+        payload.put("projectTypeKey", "software");
+        payload.put("projectTemplateKey", "com.pyxis.greenhopper.jira:gh-scrum-template");
+        payload.put("description", description);
+        payload.put("avatarId", 10000);//default avatar
+        payload.put("permissionScheme", permissionScheme);
+        payload.put("notificationScheme", 10000);//default notification scheme
+        if(categoryId != -1) {
+            payload.put("categoryId", categoryId);
+        }
+        JSON response;
+        try{
+            URI uri = restclient.buildURI(Resource.getBaseUri() + "project");
+            response = restclient.post(uri, payload);
+        }catch(Exception e){
+            throw new JiraException(e.getMessage());
+        }
+
+        if(!(response instanceof JSONObject)){
+            throw new JiraException("Create project failed.");
+        }
+
+        return ((JSONObject) response).getString("id");
+    }
     
     /**
      * Obtains information about a project, given its project key.
@@ -508,6 +545,16 @@ public class JiraClient {
         } catch (Exception ex) {
             throw new JiraException(ex.getMessage(), ex);
         }
+    }
+
+    /**
+     * 将项目与issuetyescheme进行关联
+     * @param schemeId
+     * @param idOrkeys
+     * @throws JiraException
+     */
+    public void addIssueTypeSchemeProjectAssociations(int schemeId, String...idOrkeys) throws JiraException{
+        new IssueTypeScheme(restclient).addIssueTypeSchemeProjectAssociations(schemeId, idOrkeys);
     }
 
     /**
@@ -574,6 +621,15 @@ public class JiraClient {
         }catch(Exception ex){
             throw new JiraException(ex.getMessage(), ex);
         }
+    }
+
+    /**
+     * 获取所有的project category
+     * @return
+     * @throws Exception
+     */
+    public List<ProjectCategory> projectCategories() throws Exception{
+        return ProjectCategory.getAll(restclient);
     }
     
     /**

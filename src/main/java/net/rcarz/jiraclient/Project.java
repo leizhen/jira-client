@@ -189,6 +189,37 @@ public class Project extends Resource {
         return;
     }
 
+    /**
+     * update a project
+     */
+    public void updateProject(String name, String description, Integer permissionScheme, Integer category) throws JiraException{
+        JSONObject jsonObject = new JSONObject();
+        JSON response;
+        if(name != null){
+            jsonObject.put("name", name);
+        }
+        if(description != null){
+            jsonObject.put("description", description);
+        }
+        if(permissionScheme != null){
+            jsonObject.put("permissionScheme", permissionScheme);
+        }
+        if(category != null){
+            jsonObject.put("category", category);
+        }
+        try{
+            response = restclient.put(getBaseUri() + "project/" + key, jsonObject);
+        }catch(Exception e){
+            throw new JiraException(e.getMessage());
+        }
+
+        if (!(response instanceof JSONObject)) {
+            throw new JiraException("JSON payload is malformed");
+        }
+    }
+
+
+
     @Override
     public String toString() {
         return getName();

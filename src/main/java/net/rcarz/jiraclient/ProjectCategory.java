@@ -19,16 +19,18 @@
 
 package net.rcarz.jiraclient;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import net.sf.json.JSON;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 /**
  * Represents a project category.
  */
 public class ProjectCategory extends Resource {
-
     private String name = null;
     private String description = null;
 
@@ -79,6 +81,27 @@ public class ProjectCategory extends Resource {
             throw new JiraException("JSON payload is malformed");
 
         return new ProjectCategory(restclient, (JSONObject)result);
+    }
+
+    /**
+     * 获取所有的project category
+     * @param restClient
+     * @return
+     * @throws JiraException
+     */
+    public static List<ProjectCategory> getAll(RestClient restClient) throws JiraException{
+        List<ProjectCategory> list = new ArrayList<ProjectCategory>();
+        try{
+            JSONArray result = (JSONArray) restClient.get(getBaseUri() + "projectCategory");
+            for(int i = 0; i < result.size(); i ++){
+                JSONObject jsonObject = result.getJSONObject(i);
+                ProjectCategory projectCategory = new ProjectCategory(restClient, jsonObject);
+                list.add(projectCategory);
+            }
+        }catch(Exception ex){
+            throw new JiraException(ex.getMessage());
+        }
+        return list;
     }
 
     @Override

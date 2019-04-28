@@ -88,5 +88,13 @@ public abstract class Resource {
     public String getSelf() {
         return self;
     }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setSelf(String self) {
+        this.self = self;
+    }
 }
 
