@@ -279,5 +279,40 @@ public class Version extends Resource {
         FluentCreate fc = new FluentCreate(restclient, project);
         return fc;
     }
+
+    /**
+     * 发布一个version
+     * @return
+     */
+    public Version release() throws Exception{
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("released", true);
+        jsonObject.put("archived", false);
+        JSON result;
+        try {
+            result = restclient.put(getBaseUri() + "version/" + id, jsonObject);
+        } catch (Exception ex) {
+            throw new JiraException("Failed to update version " + id, ex);
+        }
+        return this;
+    }
+
+    /**
+     * archive一个release
+     * @return
+     */
+    public Version archive() throws Exception{
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("released", false);
+        jsonObject.put("archived", true);
+
+        JSON result;
+        try {
+            result = restclient.put(getBaseUri() + "version/" + id, jsonObject);
+        } catch (Exception ex) {
+            throw new JiraException("Failed to update version " + id, ex);
+        }
+        return this;
+    }
 }
 
